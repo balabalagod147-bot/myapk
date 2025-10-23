@@ -25,39 +25,18 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade buildozer "cython<3.0"
 
-        # 设置 Android SDK 环境变量
-        export ANDROID_HOME=$HOME/android-sdk
-        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+        # 定义统一 SDK 路径
+        export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
+        export ANDROID_HOME=$ANDROID_SDK_ROOT
+        export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
 
-        # 下载并安装 Android command-line tools
-        mkdir -p $ANDROID_HOME/cmdline-tools
-        cd $ANDROID_HOME/cmdline-tools
+        # 下载并安装 command-line tools
+        mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
+        cd $ANDROID_SDK_ROOT/cmdline-tools
         wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip
         unzip tools.zip -d latest
         rm tools.zip
 
-        # 修正路径结构：把真正的工具移动到 expected 位置
-        mv $ANDROID_HOME/cmdline-tools/latest/cmdline-tools/* $ANDROID_HOME/cmdline-tools/latest/
-        rmdir $ANDROID_HOME/cmdline-tools/latest/cmdline-tools
-
-        # 确保 sdkmanager 可执行
-        chmod +x $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager
-
-        # 接受所有许可（显式指定 SDK root）
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
-
-        # 安装必需的 SDK 组件
-        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "platforms;android-34" "build-tools;34.0.0"
-
-        echo "✅ Android SDK & Build Tools 已正确安装"
-
-    - name: Build with Buildozer
-      run: |
-        export PATH=$PATH:$HOME/.local/bin
-        buildozer -v android debug
-
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: apk-package
-        path: bin/*.apk
+        # 调整路径结构
+        mv $ANDROID_SDK_ROOT/cmdline-tools/latest/cmdline-tools/* $ANDROID_SDK_ROOT/cmdline-tools/latest/
+        rmdir $ANDROID_SDK_ROOT/cmd
