@@ -25,7 +25,6 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade buildozer "cython<3.0"
 
-        # 设置 Android SDK 统一路径（与 Buildozer 默认一致）
         export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
         export ANDROID_HOME=$ANDROID_SDK_ROOT
         mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest
@@ -35,13 +34,13 @@ jobs:
         unzip -q tools.zip
         rm tools.zip
 
-        # 自动检测 sdkmanager 实际位置
+        # 自动检测 sdkmanager 路径
         if [ -f "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" ]; then
             SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
         elif [ -f "$ANDROID_SDK_ROOT/cmdline-tools/latest/cmdline-tools/bin/sdkmanager" ]; then
             SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/cmdline-tools/bin/sdkmanager"
         else
-            echo "❌ sdkmanager not found after unzip."
+            echo "❌ sdkmanager not found!"
             find $ANDROID_SDK_ROOT -type f -name sdkmanager
             exit 1
         fi
@@ -55,12 +54,18 @@ jobs:
         # 安装 Android 平台与构建工具
         "$SDKMANAGER" --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
-        echo "✅ Android SDK & Build Tools 安装完成"
+        # --- 关键修复 ---
+        # 兼容旧版 Buildozer 目录逻辑：建立软链接
+        mkdir -p $ANDROID_SDK_ROOT/tools/bin
+        ln -sf "$SDKMANAGER" "$ANDROID_SDK_ROOT/tools/bin/sdkmanager"
+
+        echo "✅ Android SDK & Build Tools 安装完成并兼容旧路径"
 
     - name: Build with Buildozer
       run: |
         export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
         export ANDROID_HOME=$ANDROID_SDK_ROOT
+        export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
         export PATH=$PATH:$HOME/.local/bin
         buildozer -v android debug
 
