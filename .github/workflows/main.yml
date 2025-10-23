@@ -25,18 +25,41 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade buildozer "cython<3.0"
 
-        # 定义统一 SDK 路径
+        # 定义 SDK 路径（与 Buildozer 默认一致）
         export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
         export ANDROID_HOME=$ANDROID_SDK_ROOT
         export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
 
-        # 下载并安装 command-line tools
-        mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
-        cd $ANDROID_SDK_ROOT/cmdline-tools
+        # 创建必要目录
+        mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest
+
+        # 下载并解压命令行工具
+        cd $ANDROID_SDK_ROOT/cmdline-tools/latest
         wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip
-        unzip tools.zip -d latest
+        unzip -q tools.zip
         rm tools.zip
 
-        # 调整路径结构
-        mv $ANDROID_SDK_ROOT/cmdline-tools/latest/cmdline-tools/* $ANDROID_SDK_ROOT/cmdline-tools/latest/
-        rmdir $ANDROID_SDK_ROOT/cmd
+        # 确保 sdkmanager 可执行
+        chmod +x $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager
+
+        # 接受所有许可证（显式指定 sdk_root）
+        yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses || true
+
+        # 安装构建工具和平台
+        $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+        echo "✅ Android SDK & Build Tools 安装完成"
+
+    - name: Build with Buildozer
+      run: |
+        export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
+        export ANDROID_HOME=$ANDROID_SDK_ROOT
+        export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
+        export PATH=$PATH:$HOME/.local/bin
+        buildozer -v android debug
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: apk-package
+        path: bin/*.apk
