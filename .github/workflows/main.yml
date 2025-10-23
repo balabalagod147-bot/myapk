@@ -34,7 +34,7 @@ jobs:
         unzip -q tools.zip
         rm tools.zip
 
-        # 自动检测 sdkmanager 实际位置
+        # 自动检测 sdkmanager 真实位置
         if [ -f "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" ]; then
             SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
         elif [ -f "$ANDROID_SDK_ROOT/cmdline-tools/latest/cmdline-tools/bin/sdkmanager" ]; then
@@ -48,17 +48,15 @@ jobs:
         chmod +x "$SDKMANAGER"
         echo "✅ sdkmanager detected at: $SDKMANAGER"
 
-        # 接受全部许可
+        # 接受许可并安装核心工具
         yes | "$SDKMANAGER" --sdk_root=$ANDROID_SDK_ROOT --licenses || true
-
-        # 安装必要的 SDK 构建工具
         "$SDKMANAGER" --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
-        # --- 核心兼容修复：为 Buildozer 创建旧版路径软链接 ---
-        mkdir -p $ANDROID_SDK_ROOT/tools
-        ln -sf $ANDROID_SDK_ROOT/cmdline-tools/latest/bin $ANDROID_SDK_ROOT/tools
+        # 🔧 核心修复：为 Buildozer 创建旧 SDK 兼容路径
+        mkdir -p $ANDROID_SDK_ROOT/tools/bin
+        ln -sf "$SDKMANAGER" "$ANDROID_SDK_ROOT/tools/bin/sdkmanager"
 
-        echo "✅ Android SDK & Build Tools 安装完成并创建兼容路径"
+        echo "✅ Android SDK & Build Tools 安装完成，旧路径已兼容"
 
     - name: Build with Buildozer
       run: |
@@ -66,6 +64,14 @@ jobs:
         export ANDROID_HOME=$ANDROID_SDK_ROOT
         export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
         export PATH=$PATH:$HOME/.local/bin
+
+        # 🧩 再次确认软链接存在
+        if [ ! -f "$ANDROID_SDK_ROOT/tools/bin/sdkmanager" ]; then
+            echo "⚠️ sdkmanager link missing, recreating..."
+            mkdir -p $ANDROID_SDK_ROOT/tools/bin
+            ln -sf "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "$ANDROID_SDK_ROOT/tools/bin/sdkmanager"
+        fi
+
         buildozer -v android debug
 
     - name: Upload Artifact
