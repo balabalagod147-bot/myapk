@@ -25,28 +25,35 @@ jobs:
         pip install --upgrade pip
         pip install --upgrade buildozer "cython<3.0"
 
-        # 定义 SDK 路径（与 Buildozer 默认一致）
+        # 设置 Android SDK 统一路径（与 Buildozer 默认一致）
         export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
         export ANDROID_HOME=$ANDROID_SDK_ROOT
-        export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
-
-        # 创建必要目录
         mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest
 
-        # 下载并解压命令行工具
         cd $ANDROID_SDK_ROOT/cmdline-tools/latest
-        wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip
         unzip -q tools.zip
         rm tools.zip
 
-        # 确保 sdkmanager 可执行
-        chmod +x $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager
+        # 自动检测 sdkmanager 实际位置
+        if [ -f "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" ]; then
+            SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+        elif [ -f "$ANDROID_SDK_ROOT/cmdline-tools/latest/cmdline-tools/bin/sdkmanager" ]; then
+            SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/cmdline-tools/bin/sdkmanager"
+        else
+            echo "❌ sdkmanager not found after unzip."
+            find $ANDROID_SDK_ROOT -type f -name sdkmanager
+            exit 1
+        fi
 
-        # 接受所有许可证（显式指定 sdk_root）
-        yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses || true
+        chmod +x "$SDKMANAGER"
+        echo "✅ sdkmanager detected at: $SDKMANAGER"
 
-        # 安装构建工具和平台
-        $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+        # 接受所有许可证
+        yes | "$SDKMANAGER" --sdk_root=$ANDROID_SDK_ROOT --licenses || true
+
+        # 安装 Android 平台与构建工具
+        "$SDKMANAGER" --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
         echo "✅ Android SDK & Build Tools 安装完成"
 
@@ -54,7 +61,6 @@ jobs:
       run: |
         export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
         export ANDROID_HOME=$ANDROID_SDK_ROOT
-        export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
         export PATH=$PATH:$HOME/.local/bin
         buildozer -v android debug
 
