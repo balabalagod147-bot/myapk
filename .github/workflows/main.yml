@@ -22,17 +22,29 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev cmake libffi-dev libssl-dev
+
+        # 安装 buildozer 及依赖
+        pip install --upgrade pip
         pip install --upgrade buildozer "cython<3.0"
 
-        # --- 以下是新增的核心修复步骤 ---
-        # 1. 接受所有 Android SDK 许可
-        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-        
-        # 2. 手动安装我们需要的 build-tools 版本
-        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "build-tools;34.0.0"
+        # 确保 ANDROID_HOME 已定义
+        export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+
+        # 创建 SDK 工具目录（如果不存在）
+        mkdir -p $ANDROID_HOME/cmdline-tools/latest
+
+        # 接受全部 Android SDK 许可证
+        yes | sdkmanager --licenses || true
+
+        # 安装稳定可用的 build-tools 与平台（避免 36.1 的 license 问题）
+        sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+        echo "✅ Android SDK 已安装并通过许可验证"
 
     - name: Build with Buildozer
       run: |
+        export PATH=$PATH:$HOME/.local/bin
         buildozer -v android debug
 
     - name: Upload Artifact
