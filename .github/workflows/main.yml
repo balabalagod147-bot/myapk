@@ -27,22 +27,25 @@ jobs:
 
         # 设置 Android SDK 环境变量
         export ANDROID_HOME=$HOME/android-sdk
-        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+        export PATH=$ANDROID_HOME/cmdline-tools/latest/cmdline-tools/bin:$ANDROID_HOME/platform-tools:$PATH
 
-        # 创建目录并下载 command-line 工具（sdkmanager 所在位置）
-        mkdir -p $ANDROID_HOME/cmdline-tools
-        cd $ANDROID_HOME/cmdline-tools
+        # 创建目录并下载 command-line 工具
+        mkdir -p $ANDROID_HOME/cmdline-tools/latest
+        cd $ANDROID_HOME/cmdline-tools/latest
         wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip
-        unzip tools.zip -d latest
+        unzip tools.zip
         rm tools.zip
 
-        # 确保 sdkmanager 可用
+        # 确保 sdkmanager 可执行
+        chmod +x $ANDROID_HOME/cmdline-tools/latest/cmdline-tools/bin/sdkmanager
+
+        # 接受所有许可
         yes | sdkmanager --licenses || true
 
-        # 安装平台与构建工具
+        # 安装必要的 SDK 组件
         sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
-        echo "✅ Android SDK & Build Tools 安装完成"
+        echo "✅ Android SDK & Build Tools 已安装"
 
     - name: Build with Buildozer
       run: |
