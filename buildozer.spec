@@ -21,9 +21,14 @@ icon.filename = icon.png
 android.permissions = WRITE_EXTERNAL_STORAGE, READ_EXTERNAL_STORAGE
 
 # (SDK 和 NDK 版本)
+# 让 buildozer 自动选择最合适的版本，以提高兼容性
 android.minapi = 24
-android.sdk = 33
-android.ndk = 25b
+# android.sdk = 33
+# android.ndk = 25b
+
+# (明确指定 Android build tools 的版本，解决 Aidl not found 问题)
+android.build_tools = 34.0.0
+
 
 [buildozer]
 # (日志级别，2为最详细)
