@@ -21,26 +21,28 @@ jobs:
     - name: Install dependencies and Build Tools
       run: |
         sudo apt-get update
-        sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev cmake libffi-dev libssl-dev
-
-        # 安装 buildozer 及依赖
+        sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip wget
         pip install --upgrade pip
         pip install --upgrade buildozer "cython<3.0"
 
-        # 确保 ANDROID_HOME 已定义
-        export ANDROID_HOME=$HOME/.buildozer/android/platform/android-sdk
+        # 设置 Android SDK 环境变量
+        export ANDROID_HOME=$HOME/android-sdk
         export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
 
-        # 创建 SDK 工具目录（如果不存在）
-        mkdir -p $ANDROID_HOME/cmdline-tools/latest
+        # 创建目录并下载 command-line 工具（sdkmanager 所在位置）
+        mkdir -p $ANDROID_HOME/cmdline-tools
+        cd $ANDROID_HOME/cmdline-tools
+        wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip
+        unzip tools.zip -d latest
+        rm tools.zip
 
-        # 接受全部 Android SDK 许可证
+        # 确保 sdkmanager 可用
         yes | sdkmanager --licenses || true
 
-        # 安装稳定可用的 build-tools 与平台（避免 36.1 的 license 问题）
+        # 安装平台与构建工具
         sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
-        echo "✅ Android SDK 已安装并通过许可验证"
+        echo "✅ Android SDK & Build Tools 安装完成"
 
     - name: Build with Buildozer
       run: |
@@ -50,5 +52,5 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: package
+        name: apk-package
         path: bin/*.apk
