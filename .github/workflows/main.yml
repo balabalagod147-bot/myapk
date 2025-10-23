@@ -18,7 +18,7 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: Install dependencies and Build Tools
+    - name: Install dependencies and Android SDK
       run: |
         sudo apt-get update
         sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip wget
@@ -27,25 +27,29 @@ jobs:
 
         # 设置 Android SDK 环境变量
         export ANDROID_HOME=$HOME/android-sdk
-        export PATH=$ANDROID_HOME/cmdline-tools/latest/cmdline-tools/bin:$ANDROID_HOME/platform-tools:$PATH
+        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
 
-        # 创建目录并下载 command-line 工具
-        mkdir -p $ANDROID_HOME/cmdline-tools/latest
-        cd $ANDROID_HOME/cmdline-tools/latest
+        # 下载并安装 Android command-line tools
+        mkdir -p $ANDROID_HOME/cmdline-tools
+        cd $ANDROID_HOME/cmdline-tools
         wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip
-        unzip tools.zip
+        unzip tools.zip -d latest
         rm tools.zip
 
+        # 修正路径结构：把真正的工具移动到 expected 位置
+        mv $ANDROID_HOME/cmdline-tools/latest/cmdline-tools/* $ANDROID_HOME/cmdline-tools/latest/
+        rmdir $ANDROID_HOME/cmdline-tools/latest/cmdline-tools
+
         # 确保 sdkmanager 可执行
-        chmod +x $ANDROID_HOME/cmdline-tools/latest/cmdline-tools/bin/sdkmanager
+        chmod +x $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager
 
-        # 接受所有许可
-        yes | sdkmanager --licenses || true
+        # 接受所有许可（显式指定 SDK root）
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
 
-        # 安装必要的 SDK 组件
-        sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+        # 安装必需的 SDK 组件
+        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
-        echo "✅ Android SDK & Build Tools 已安装"
+        echo "✅ Android SDK & Build Tools 已正确安装"
 
     - name: Build with Buildozer
       run: |
