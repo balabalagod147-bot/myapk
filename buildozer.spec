@@ -27,7 +27,8 @@ android.minapi = 24
 # android.ndk = 25b
 
 # (明确指定 Android build tools 的版本，解决 Aidl not found 问题)
-android.build_tools = 34.0.0
+# ‼️‼️‼️ 这是关键的修改点 ‼️‼️‼️
+android.build_tools_version = 34.0.0
 
 
 [buildozer]
