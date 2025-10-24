@@ -1,5 +1,5 @@
 # =========================================================================
-#             优化后的 Buildozer Android APK 工作流
+#             最终优化版 - Buildozer Android APK 工作流
 # =========================================================================
 name: Buildozer Android APK
 
@@ -30,10 +30,12 @@ jobs:
       with:
         python-version: '3.10'
 
-    # 步骤 4: 安装 Android SDK 和相关组件
-    # 这个 Action 会自动处理下载、解压、接受许可和设置环境变量 (ANDROID_HOME)
+    # 步骤 4: 安装 Android SDK 和指定版本的构建工具 (核心修改点)
+    # 通过 build-tools 参数预先安装好特定版本，并自动接受许可
     - name: Set up Android SDK
       uses: android-actions/setup-android@v3
+      with:
+        build-tools: "34.0.0" # <--- 预先安装好 build-tools 34.0.0
 
     # 步骤 5: 安装 Buildozer 及其依赖
     - name: Install Buildozer and dependencies
@@ -42,7 +44,6 @@ jobs:
         pip install --upgrade buildozer "cython<3.0"
 
     # 步骤 6: 使用 Buildozer 构建 APK
-    # 无需再手动设置复杂的 PATH 或后台脚本
     - name: Build with Buildozer
       run: |
         buildozer -v android debug
@@ -52,5 +53,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: apk-package
-        # 路径通常在 bin/ 目录下，如果你的 buildozer.spec 文件有修改，请相应调整
         path: bin/*.apk
