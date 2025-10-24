@@ -1,5 +1,5 @@
 # =========================================================================
-#             最终优化版 - Buildozer Android APK 工作流
+#             最终确认版 - Buildozer Android APK 工作流
 # =========================================================================
 name: Buildozer Android APK
 
@@ -30,12 +30,12 @@ jobs:
       with:
         python-version: '3.10'
 
-    # 步骤 4: 安装 Android SDK 和指定版本的构建工具 (核心修改点)
-    # 通过 build-tools 参数预先安装好特定版本，并自动接受许可
+    # 步骤 4: 安装 Android SDK 和指定版本的构建工具 (核心)
+    # 这一步会预先安装好 build-tools 34.0.0 并自动同意许可证
     - name: Set up Android SDK
       uses: android-actions/setup-android@v3
       with:
-        build-tools: "34.0.0" # <--- 预先安装好 build-tools 34.0.0
+        build-tools: "34.0.0"
 
     # 步骤 5: 安装 Buildozer 及其依赖
     - name: Install Buildozer and dependencies
