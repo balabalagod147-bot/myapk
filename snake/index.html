@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Classic Snake</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="panel">
+        <header class="panel__header">
+          <div>
+            <h1>Snake</h1>
+            <p class="subtitle">Classic grid movement, score, restart.</p>
+          </div>
+          <div class="stats" aria-label="Game stats">
+            <div class="stat">
+              <span class="stat__label">Score</span>
+              <strong id="score">0</strong>
+            </div>
+            <div class="stat">
+              <span class="stat__label">Status</span>
+              <strong id="status">Ready</strong>
+            </div>
+          </div>
+        </header>
+
+        <div class="actions">
+          <button id="start-button" type="button">Start</button>
+          <button id="pause-button" type="button">Pause</button>
+          <button id="restart-button" type="button">Restart</button>
+        </div>
+
+        <section class="board-wrap" aria-label="Snake game area">
+          <div id="board" class="board" role="grid" aria-label="Snake board"></div>
+          <p id="message" class="message">Use arrow keys or WASD to move.</p>
+        </section>
+
+        <section class="controls" aria-label="On-screen controls">
+          <button class="control control--up" type="button" data-direction="UP">▲</button>
+          <button class="control control--left" type="button" data-direction="LEFT">◀</button>
+          <button class="control control--down" type="button" data-direction="DOWN">▼</button>
+          <button class="control control--right" type="button" data-direction="RIGHT">▶</button>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="./game.js"></script>
+  </body>
+</html>
